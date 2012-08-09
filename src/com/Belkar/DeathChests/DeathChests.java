@@ -1,4 +1,4 @@
-package com.Belkar.DeathChest;
+package com.Belkar.DeathChests;
 
 import java.io.File;
 import java.security.InvalidParameterException;
@@ -20,7 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-public class DeathChest extends JavaPlugin {
+public class DeathChests extends JavaPlugin {
 	// Where the chests get saved
 	private static final String CHEST_FILE = "chests.dat";
 

@@ -1,4 +1,4 @@
-package com.Belkar.DeathChest;
+package com.Belkar.DeathChests;
 
 import java.util.List;
 
@@ -17,9 +17,9 @@ import org.bukkit.inventory.ItemStack;
 
 public class DeathChestEventListener implements Listener {
 
-	private DeathChest plugin;
+	private DeathChests plugin;
 
-	public DeathChestEventListener(DeathChest deathChest) {
+	public DeathChestEventListener(DeathChests deathChest) {
 		this.plugin = deathChest;
 		
 		// Register the EventListener

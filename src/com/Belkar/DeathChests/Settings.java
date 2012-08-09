@@ -1,4 +1,4 @@
-package com.Belkar.DeathChest;
+package com.Belkar.DeathChests;
 
 
 import org.bukkit.configuration.file.FileConfiguration;
