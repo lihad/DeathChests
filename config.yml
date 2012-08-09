@@ -1,0 +1,3 @@
+# Default Config-File
+general:
+  autosavePeriod: 900 # in seconds!

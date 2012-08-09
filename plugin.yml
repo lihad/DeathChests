@@ -1,0 +1,30 @@
+name: DeathChests
+main: com.Belkar.DeathChest.DeathChest
+author: _Belkar_
+version: 1.0
+commands:
+  deathchest:
+    description: Main command
+    usage: /<command>
+    aliases: dc
+    permission: deathchest.admin
+permissions:
+  deathchest.admin:
+    description: Allows to use the commands (useless for normal users)
+    default: op
+  deathchest.breakOthers:
+    description: Allows to loot and break the chest of others
+    default: false
+  deathchest.use:
+    description: Creates a chest upon death if you have a chest with you
+    default: true
+  deathchest.use.free:
+    description: Doesn't need a chest to use
+    default: false
+    children:
+      deathchest.use: true
+  deathchest.use.sign:
+    description: Places a sign on your death chest (if possible) (doesn't need a sign in inventory, but it doesn't drop anything)
+    default: true
+    children:
+      deathchest.use: true
