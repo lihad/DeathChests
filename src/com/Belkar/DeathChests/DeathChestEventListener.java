@@ -28,65 +28,76 @@ public class DeathChestEventListener implements Listener {
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		Player player = event.getEntity();
-		if (player == null)
-			return;
-		
-		//TODO: Editable settings for EXP/concurrency loss
-		
-		// Only proceed if the player is allowed to drop DeathChests
-		if (!player.hasPermission("deathchest.use")) {
-			return;
-		}
-		
-		// Get the items from the player and convert them into a usable form.
-		List<ItemStack> inv = event.getDrops();
-		ItemStack[] inventory = new ItemStack[inv.size()];
-		inventory = inv.toArray(inventory);
-		
-		// Count the used inventory spaces and look if there are enough chests
-		int countStacks = Utils.getStacks(player.getInventory());
-		boolean doubleChest = false;
-		boolean free = player.hasPermission("deathchest.use.free");
-		if (!player.getInventory().contains(Material.CHEST) && !free) {
-			return;
-		}
-		event.getDrops().clear();
-		
-		// Check if a DoubleChest is needed and possible to create.
-		if (countStacks > 9 * 3 && (free || player.getInventory().contains(Material.CHEST, 2))) {
-			doubleChest = true;
-		}
-		
-		int needed = (doubleChest ? 2 : 1);
-		int countChest = 0;
-		
-		// Remove the chests from the players inventory
-		if (!free) {
-			for (int i = 0; i < inventory.length && needed > 0; i++) {
-				ItemStack item = inventory[i];
-				// Skip empty inventory spaces
-				if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
-					if (item.getType() == Material.CHEST) {
-						// If the stack is bigger than needed, substract from the stack and set needed to 0 (since there are enough to use)
-						if (item.getAmount() >= needed) {
-							item.setAmount(item.getAmount() - needed);
-							countChest += needed;
-							needed = 0;
-						// if the stack is less than needed, remove the stack and substract the stack-size from needed
-						} else {
-							needed -= item.getAmount();
-							countChest += item.getAmount();
-							item.setAmount(0);
+		List<ItemStack> inv = null;
+		try {
+			Player player = event.getEntity();
+			if (player == null)
+				return;
+			
+			//TODO: Editable settings for EXP/concurrency loss
+			
+			// Only proceed if the player is allowed to drop DeathChests
+			if (!player.hasPermission("deathchest.use")) {
+//				System.out.println("Not enough permissions...");
+				return;
+			}
+			
+			// Get the items from the player and convert them into a usable form.
+			inv = event.getDrops();
+			ItemStack[] inventory = new ItemStack[inv.size()];
+			inventory = inv.toArray(inventory);
+			
+			// Count the used inventory spaces and look if there are enough chests
+			int countStacks = Utils.getStacks(player.getInventory());
+			boolean doubleChest = false;
+			boolean free = player.hasPermission("deathchest.use.free");
+			if (!player.getInventory().contains(Material.CHEST) && !free) {
+//				System.out.println("No chest...");
+				return;
+			}
+			event.getDrops().clear();
+			
+			// Check if a DoubleChest is needed and possible to create.
+			if (countStacks > 9 * 3 && (free || player.getInventory().contains(Material.CHEST, 2))) {
+				doubleChest = true;
+			}
+			
+			int needed = (doubleChest ? 2 : 1);
+			int countChest = (free ? needed : 0);
+			
+			// Remove the chests from the players inventory
+			if (!free) {
+				for (int i = 0; i < inventory.length && needed > 0; i++) {
+					ItemStack item = inventory[i];
+					// Skip empty inventory spaces
+					if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
+						if (item.getType() == Material.CHEST) {
+							// If the stack is bigger than needed, substract from the stack and set needed to 0 (since there are enough to use)
+							if (item.getAmount() >= needed) {
+								item.setAmount(item.getAmount() - needed);
+								countChest += needed;
+								needed = 0;
+							// if the stack is less than needed, remove the stack and substract the stack-size from needed
+							} else {
+								needed -= item.getAmount();
+								countChest += item.getAmount();
+								item.setAmount(0);
+							}
 						}
 					}
 				}
 			}
-		}
-		
-		// Recheck if the chests are available and place them if possible.
-		if (countChest > 0 || free) {
-			plugin.addChest(player, inventory, countChest);
+			
+			// Recheck if the chests are available and place them if possible. If something strange occoured, put all the drops back on earth.
+			if (countChest > 0 || free) {
+				plugin.addChest(player, inventory, countChest, free);
+			} else {
+				throw new Exception();
+			}
+		} catch (Exception e) {
+			if (inv != null) {
+				event.getDrops().addAll(inv);
+			}
 		}
 	}
 

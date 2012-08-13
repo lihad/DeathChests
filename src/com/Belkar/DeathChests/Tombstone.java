@@ -28,11 +28,7 @@ public class Tombstone implements Serializable {
 		this.worldName = world; 
 		this.chestPosition = Utils.toArray(chestPos);
 		this.chest2Position = Utils.toArray(chest2Pos);
-		this.signPosition = Utils.toArray(signPos);	
-		
-		if (owner.hasPermission("deathchest.use.free")) {
-			setDropChests();
-		}
+		this.signPosition = Utils.toArray(signPos);
 	}
 
 	/**Returns the containing World of the DeathChest

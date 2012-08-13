@@ -166,7 +166,7 @@ public class DeathChests extends JavaPlugin {
 	 * @param inventory The full inventory of the Owner (can't be gathered later since now it's already dropped)
 	 * @param countChest Amount of available chests (1 = singleChest, 2 = doubleChest)
 	 */
-	public void addChest(Player owner, ItemStack[] inventory, int countChest) {
+	public void addChest(Player owner, ItemStack[] inventory, int countChest, boolean free) {
 		if (owner == null || inventory == null)
 			throw new NullPointerException();
 		if (countChest <= 0 || countChest > 2)
@@ -285,6 +285,9 @@ public class DeathChests extends JavaPlugin {
 		
 		// Add the newly created DeathChest to the collection
 		Tombstone stone = new Tombstone(owner, owner.getWorld().getName(), chestPos, chest2Pos, signPosition);
+		if (free) {
+			stone.setDropChests();
+		}
 		synchronized (deathChests) {
 			deathChests.add(stone);
 		}
@@ -504,11 +507,13 @@ public class DeathChests extends JavaPlugin {
 		
 		// If the Chests are empty, put them into the players inventory or drop them on the ground.
 		if (Utils.getStacks(chest) <= 0) {
-			List<ItemStack> additionalItems = new LinkedList<>(player.getInventory().addItem(stone.getChests()).values());
-			if (additionalItems.size() > 0) {
-				player.getWorld().dropItem(player.getLocation(), additionalItems.get(0));
+			if (!stone.isDropped()) {
+				List<ItemStack> additionalItems = new LinkedList<>(player.getInventory().addItem(stone.getChests()).values());
+				if (additionalItems.size() > 0) {
+					player.getWorld().dropItem(player.getLocation(), additionalItems.get(0));
+				}
+				stone.setDropChests();
 			}
-			stone.setDropChests();
 			
 			// Remove the chests from the world and the DeathChest-Container
 			removeChest(stone);

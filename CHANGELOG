@@ -1,0 +1,7 @@
+Version 1.0
+	First Release
+
+Version 1.1
+	Fixed bug: Dying and having the 'deathchest.use.free' permission node now doesn't result in a IndexOutOfBoundsException anymore
+	Fixed those "free"-chests dropping their chests
+	Added function so that fail at placing a deathchest results in dropping those items instead of removing them completely
