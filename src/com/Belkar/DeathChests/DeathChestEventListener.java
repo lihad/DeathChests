@@ -34,6 +34,11 @@ public class DeathChestEventListener implements Listener {
 			if (player == null)
 				return;
 			
+			Player killer = event.getEntity().getKiller();
+			if (killer != null && !player.hasPermission("deathchest.use.pvp")) {
+				return;
+			}
+			
 			//TODO: Editable settings for EXP/concurrency loss
 			
 			// Only proceed if the player is allowed to drop DeathChests
@@ -159,13 +164,13 @@ public class DeathChestEventListener implements Listener {
 				Tombstone stone = plugin.getDeathChestAt(block.getLocation());
 				if (stone == null)
 					return;
-
+				
 				// Get the owner (of the DeathChest)
-				Player owner = stone.getOwner();
+				String owner = stone.getOwnerName();
 				
 				// Only allow the owner or those who are permitted to loot/break others DeathChests
-				if (!player.hasPermission("deathchest.breakOthers") || owner == null || !(player.equals(owner))) {
-					player.sendMessage("You are not allowed to open this tombstone! It belongs to: " + owner.getName());
+				if (!stone.isTimedOut() && (!player.hasPermission("deathchest.breakOthers") || owner == null || !(player.getName().equalsIgnoreCase(owner)))) {
+					player.sendMessage("You are not allowed to open this tombstone! It belongs to: " + owner);
 					event.setCancelled(true);
 				} else {
 					// If the player is also sneaking, invoke the auto-transfer method

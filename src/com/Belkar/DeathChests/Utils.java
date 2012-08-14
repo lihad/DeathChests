@@ -1,14 +1,22 @@
 package com.Belkar.DeathChests;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.management.modelmbean.XMLParseException;
+import javax.xml.parsers.*;
+
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.ItemInWorldManager;
@@ -29,31 +37,32 @@ public class Utils {
 	public static final byte SIGN_SOUTH = 0x3;
 	public static final byte SIGN_WEST = 0x4;
 	public static final byte SIGN_EAST = 0x5;
+	private static final String DEATHCHEST_XML_TAG = "deathchest";
 	
-	/**Save an Object to the FileSystem
-	 * @param obj Object to save
-	 * @param path Path where to save the Object
-	 */
-	public static <T extends Object> void save(T obj,String path) throws Exception
-	{
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path));
-		oos.writeObject(obj);
-		oos.flush();
-		oos.close();
-	}
-	
-	/**
-	 * @param path Path to read the Object from
-	 * @return Loaded Object
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Object> T load(String path) throws Exception
-	{
-		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
-		T result = (T)ois.readObject();
-		ois.close();
-		return result;
-	}
+//	/**Save an Object to the FileSystem
+//	 * @param obj Object to save
+//	 * @param path Path where to save the Object
+//	 */
+//	public static <T extends Object> void save(T obj,String path) throws Exception
+//	{
+//		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path));
+//		oos.writeObject(obj);
+//		oos.flush();
+//		oos.close();
+//	}
+//	
+//	/**
+//	 * @param path Path to read the Object from
+//	 * @return Loaded Object
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public static <T extends Object> T load(String path) throws Exception
+//	{
+//		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
+//		T result = (T)ois.readObject();
+//		ois.close();
+//		return result;
+//	}
 
 	/**Counts the used slots in an inventory
 	 * @param inventory Inventory to count from
@@ -208,5 +217,86 @@ public class Utils {
 			i++;
 		}
 		return items;
+	}
+
+	public static boolean saveTombstones(List<Tombstone> deathChests, String chestsPath) {
+		long timestamp = System.currentTimeMillis();
+		try {
+			DocumentBuilderFactory factory =
+	            DocumentBuilderFactory.newInstance();
+	        DocumentBuilder builder = factory.newDocumentBuilder();
+
+	        // Create the writer
+	        Document xmlDoc = builder.newDocument();
+	        
+	        Element rootNode = xmlDoc.createElement("deathchestList");
+//	        String pluginName = Settings.getPluginName();
+	        String version = Settings.getVersion();
+	        rootNode.setAttribute("version", version);
+	        xmlDoc.appendChild(rootNode);
+
+	        for (Tombstone tombstone : deathChests) {
+	        	rootNode.appendChild(tombstone.createXmlNode(xmlDoc.createElement(Utils.DEATHCHEST_XML_TAG), xmlDoc, timestamp));
+			}
+	        
+	        // Put the XML file into domSource
+	        DOMSource domSource = new DOMSource(xmlDoc);
+
+	        // PrintStream will be responsible for writing
+	        // the text data to the file
+	        PrintStream ps = new PrintStream(chestsPath);
+	        StreamResult fileWriter = new StreamResult(ps);
+
+	        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+	        Transformer transformer = transformerFactory.newTransformer();
+
+	        // Finally save the file
+	        transformer.transform(domSource, fileWriter);
+	        
+	        return true;
+		} catch (ParserConfigurationException | TransformerException | FileNotFoundException ex) {
+			System.err.println("Error while writing deathchest data:");
+			ex.printStackTrace();
+		}
+		return false;
+	}
+
+	public static List<Tombstone> loadTombstone(String chestsPath) {
+		LinkedList<Tombstone> deathChests = new LinkedList<>(); 
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder builder = factory.newDocumentBuilder();
+	
+	        //Start the parser
+	        Document doc = builder.parse(new File(chestsPath));
+	        
+	        Element rootElement = doc.getDocumentElement();
+	        
+	        String version = rootElement.getAttribute("version");
+	        if (!Settings.getVersion().equals(version)) {
+	        	System.out.println("The version of the Deathchests-File changed. There are possible errors at loading them. (Probably not if your updated it)");
+	        }
+	        	        
+	        long timestamp = System.currentTimeMillis();
+	        
+	        NodeList list = rootElement.getChildNodes();
+	        int length = list.getLength();
+	        for (int i = 0; i < length; i++) {
+	        	try {
+		        	Node node = list.item(i);
+		        	String name = node.getNodeName(); 
+		        	if (name.equalsIgnoreCase(Utils.DEATHCHEST_XML_TAG)) {
+		        		deathChests.add(new Tombstone((Element)node, timestamp));
+		        	}
+	        	} catch (XMLParseException ex) {
+	        		System.err.println("Corrupted deathchest! Skipping this one!");
+	        		ex.printStackTrace();
+	        	}
+	        }
+		} catch (IOException | ParserConfigurationException | SAXException ex) {
+			System.err.println("Error while loading deathchest data:");
+			ex.printStackTrace();
+		}
+		return deathChests;
 	}
 }

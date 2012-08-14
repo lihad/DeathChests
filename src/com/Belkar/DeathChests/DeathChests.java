@@ -22,7 +22,7 @@ import org.bukkit.util.Vector;
 
 public class DeathChests extends JavaPlugin {
 	// Where the chests get saved
-	private static final String CHEST_FILE = "chests.dat";
+	private static final String CHEST_FILE = "chests.xml";
 
 	// Every side of the chest and its prioity
 	private static final Vector[] SIDE_CHEST_VECTORS = new Vector[] {new Vector(1, 0, 0), new Vector(0, 0, 1), new Vector(-1, 0, 0), new Vector(0, 0, -1) };
@@ -33,9 +33,6 @@ public class DeathChests extends JavaPlugin {
 	private DeathChestEventListener listener;
 	// List of all Tombstones (to check events, protection, etc.)
 	private List<Tombstone> deathChests = null;
-
-	// Container of the settings
-	private Settings settings = null;
 
 	// The Task ID of the autosaver (not really needed but for safety)
 	private int autosaveTaskId = -1;
@@ -54,13 +51,19 @@ public class DeathChests extends JavaPlugin {
 		if (!this.getDataFolder().exists()) {
 			this.getDataFolder().mkdirs();
 		}
-		String defaultConf = getDataFolder() + File.separator + "config.yml";
+		final String defaultConf = getDataFolder() + File.separator + "config.yml";
 		
-        if (!(new File(defaultConf).exists())) {
-        	saveDefaultConfig();
-        } else {
-        	reloadConfig();
-        }
+		this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+			
+			@Override
+			public void run() {
+		        if (!(new File(defaultConf).exists())) {
+		        	saveDefaultConfig();
+		        } else {
+		        	reloadConfig();
+		        }
+			}
+		}, 20L);
 		
         // Create and register the EventListener
 		listener = new DeathChestEventListener(this);
@@ -79,11 +82,7 @@ public class DeathChests extends JavaPlugin {
 		super.reloadConfig();
 		
 		// Read or re-read the settings
-		if (this.settings == null) {
-			settings = new Settings(this.getConfig());
-		} else {
-			settings.loadConfig(this.getConfig());
-		}
+		Settings.loadConfig(this.getConfig());
 
 		// Readout all the chests from the filesystem
 		String chestsPath = getDataFolder() + File.separator + CHEST_FILE;
@@ -93,13 +92,9 @@ public class DeathChests extends JavaPlugin {
 			File chestsFile = new File(chestsPath);
 			boolean loaded = false;
 			if (chestsFile.exists()) {
-				try {
-					deathChests = Utils.load(chestsPath);
-					loaded = true;
-				} catch (Exception e) {
-					getLogger().severe("Corrupted chests file! (Will be overwritten the next time it saves!");
-					getLogger().severe("To keep the file: copy " + CHEST_FILE + " to somewhere else and edit it there!");
-				}
+				deathChests = Utils.loadTombstone(chestsPath);
+//				deathChests = Utils.load(chestsPath);
+				loaded = true;
 			}
 			if (!loaded) {
 				deathChests = new LinkedList<>();
@@ -107,7 +102,7 @@ public class DeathChests extends JavaPlugin {
 		}
 		
 		// Start the autosaver task
-		startAutosave(this.settings.AUTOSAVE_PERIOD, chestsPath);
+		startAutosave(Settings.AUTOSAVE_PERIOD, chestsPath);
 		
 	}
 	/**Start the autosave-task (kill it if its already running and replace it)
@@ -128,7 +123,7 @@ public class DeathChests extends JavaPlugin {
 			public void run() {
 				saveChests(chestsPath);
 			}
-		}, this.settings.AUTOSAVE_PERIOD * 20, this.settings.AUTOSAVE_PERIOD * 20);
+		}, Settings.AUTOSAVE_PERIOD * 20, Settings.AUTOSAVE_PERIOD * 20);
 	}
 	
 	/**
@@ -147,7 +142,8 @@ public class DeathChests extends JavaPlugin {
 		
 		synchronized (deathChests) {
 			try {
-				Utils.save(deathChests, chestsPath);
+				Utils.saveTombstones(deathChests, chestsPath);
+//				Utils.save(deathChests, chestsPath);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}	
@@ -156,7 +152,10 @@ public class DeathChests extends JavaPlugin {
 
 	@Override
 	public void saveConfig() {
-		this.settings.saveConfig(getConfig());
+		Settings.saveConfig(getConfig());
+		if (deathChests != null) {
+			saveChests();
+		}
 		
 		super.saveConfig();
 	}

@@ -5,3 +5,9 @@ Version 1.1
 	Fixed bug: Dying and having the 'deathchest.use.free' permission node now doesn't result in a IndexOutOfBoundsException anymore
 	Fixed those "free"-chests dropping their chests
 	Added function so that fail at placing a deathchest results in dropping those items instead of removing them completely
+	
+Version 1.1c
+	Added 'deathchest.use.pvp'-Permission. If this is set the player will also drop a chest when killed by a player. Otherwise the items will get dropped normaly
+	Changed the whole saving system to be more flexible with saving specific data.
+	Added Timeout. After the timeout the chest-protection gets removed (but the binding is kept so auto-pickup works) and everyone (also without 'deathchest.breakothers') can break them. Set timeout to 0 to disable this feature.
+	Added 'deathchest.use.noTimeout' Removes the timeout features for a single player. (e.g. OPs)

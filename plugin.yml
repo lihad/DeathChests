@@ -1,7 +1,7 @@
 name: DeathChests
 main: com.Belkar.DeathChests.DeathChests
 author: _Belkar_
-version: 1.1
+version: 1.1c
 commands:
   deathchest:
     description: Main command
@@ -23,8 +23,18 @@ permissions:
     default: false
     children:
       deathchest.use: true
+  deathchest.use.pvp:
+    description: If this is set, the player will also drop a deathchest if killed by another player
+    default: true
+    children:
+      deathchest.use: true
   deathchest.use.sign:
     description: Places a sign on your death chest (if possible) (doesn't need a sign in inventory, but it doesn't drop anything)
     default: true
+    children:
+      deathchest.use: true
+  deathchest.use.noTimeout:
+    description: Disables the deactivate Timeout for future deathchests. After the timeout everyone can open it.
+    default: op
     children:
       deathchest.use: true
