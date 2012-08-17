@@ -1,7 +1,7 @@
 name: DeathChests
 main: com.Belkar.DeathChests.DeathChests
 author: _Belkar_
-version: 1.1c
+version: 1.1d
 commands:
   deathchest:
     description: Main command

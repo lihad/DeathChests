@@ -11,3 +11,8 @@ Version 1.1c
 	Changed the whole saving system to be more flexible with saving specific data.
 	Added Timeout. After the timeout the chest-protection gets removed (but the binding is kept so auto-pickup works) and everyone (also without 'deathchest.breakothers') can break them. Set timeout to 0 to disable this feature.
 	Added 'deathchest.use.noTimeout' Removes the timeout features for a single player. (e.g. OPs)
+	
+Version 1.1d
+	Added 'general.pickupEmpty' config-node. If this is set to 'true' the deathChest gets automatically collected if it got fully emptied.
+	Added 'general:emptyTimeout' defines the time in seconds between closing the chest and putting it into the inventory of the player.
+	Added link to the Dev-Bukkit site on writing an unknown command.

@@ -2,3 +2,5 @@
 general:
   autosavePeriod: 900 # in seconds!
   timeout: 900 # in seconds!
+  pickupEmpty: false
+  emptyTimeout: 5

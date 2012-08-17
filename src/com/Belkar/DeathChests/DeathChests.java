@@ -401,6 +401,8 @@ public class DeathChests extends JavaPlugin {
 			} else {
 				sender.sendMessage("Removed " + cnt + " DeathChests!");
 			}
+		} else { // Unknown Command
+			sender.sendMessage("Please look at: http://dev.bukkit.org/server-mods/deathchests/");
 		}
 //		else if (args[0].equals("dev") && sender instanceof Player) {
 //			sender.sendMessage(Integer.toString(Utils.getStacks((Player)sender)));

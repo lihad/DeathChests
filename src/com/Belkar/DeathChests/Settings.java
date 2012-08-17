@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class Settings {
+
 	/**Duration in Seconds how long the timeout lasts.
 	 */
 	public static int TIMEOUT;
@@ -12,6 +13,13 @@ public class Settings {
 	/**Period of the autosaver
 	 */
 	public static int AUTOSAVE_PERIOD;
+	
+	/**Defines if empty DeathChests should be picked up when they got emptied
+	 */
+	public static boolean PICKUP_EMPTY_CHESTS;
+	/**The time in seconds between emptying the chest and finally picking it up/putting it into the inventory
+	 */
+	public static long EMPTY_TIMEOUT = 0;
 
 	private static String pluginName;
 
@@ -27,6 +35,8 @@ public class Settings {
 	public static void loadConfig(FileConfiguration config) {
 		AUTOSAVE_PERIOD = config.getInt("general.autosavePeriod");
 		TIMEOUT = config.getInt("general.timeout");
+		PICKUP_EMPTY_CHESTS = config.getBoolean("general.pickupEmpty");
+		EMPTY_TIMEOUT = config.getInt("general.emptyTimeout");
 	}
 
 	/**Write down the configs
@@ -35,6 +45,8 @@ public class Settings {
 	public static void saveConfig(FileConfiguration config) {
 		config.set("general.autosavePeriod", AUTOSAVE_PERIOD);
 		config.set("general.timeout", TIMEOUT);
+		config.set("general.pickupEmpty", PICKUP_EMPTY_CHESTS);
+		config.set("general.emptyTimeout", EMPTY_TIMEOUT);
 		
 //		try {
 //			config.save(config.getCurrentPath());

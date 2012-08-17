@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,7 +13,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 public class DeathChestEventListener implements Listener {
@@ -179,6 +182,32 @@ public class DeathChestEventListener implements Listener {
 					}
 				}
 			}	
+		}
+	}
+	
+	@EventHandler
+	public void onInventoryClose(final InventoryCloseEvent event) {
+		if (!Settings.PICKUP_EMPTY_CHESTS)
+			return;
+		InventoryHolder container = event.getInventory().getHolder();
+		if (container instanceof Chest) {
+			Chest block = (Chest)container;
+			
+			final Tombstone stone = plugin.getDeathChestAt(block.getBlock().getLocation());
+			if (stone != null) {
+				int stackCnt = Utils.getStacks(event.getInventory());
+				if (stackCnt == 0) {
+					((Player)event.getPlayer()).sendMessage("Emptied DeathChest. It will be put in your inventory in: " + Settings.EMPTY_TIMEOUT + "s");
+					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+						@Override
+						public void run() {
+							if (Utils.getStacks(event.getInventory()) == 0) {
+								plugin.playerPickupTombstone((Player)event.getPlayer(), stone);
+							}
+						}
+					}, Settings.EMPTY_TIMEOUT * 20L);
+				}
+			}
 		}
 	}
 }
