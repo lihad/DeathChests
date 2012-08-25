@@ -299,4 +299,11 @@ public class Utils {
 		}
 		return deathChests;
 	}
+
+	public static boolean hasPermission(Player senderPlayer, String permString) {
+		if (senderPlayer == null) { // Sender is Console
+			return true;
+		}
+		return senderPlayer.hasPermission(permString);
+	}
 }

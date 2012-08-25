@@ -6,6 +6,14 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 public class Settings {
 
+	/**Indicator if EXP should be saved upon death
+	 */
+	public static boolean SAVE_EXP = false;
+
+	/**Percentage of EXP to keep
+	 */
+	public static float SAVE_EXP_RATION = 0.75f;
+	
 	/**Duration in Seconds how long the timeout lasts.
 	 */
 	public static int TIMEOUT;
@@ -37,6 +45,8 @@ public class Settings {
 		TIMEOUT = config.getInt("general.timeout");
 		PICKUP_EMPTY_CHESTS = config.getBoolean("general.pickupEmpty");
 		EMPTY_TIMEOUT = config.getInt("general.emptyTimeout");
+		SAVE_EXP = config.getBoolean("general.saveXP");
+		SAVE_EXP_RATION = (float) config.getDouble("general.saveXPRatio");
 	}
 
 	/**Write down the configs
@@ -47,6 +57,8 @@ public class Settings {
 		config.set("general.timeout", TIMEOUT);
 		config.set("general.pickupEmpty", PICKUP_EMPTY_CHESTS);
 		config.set("general.emptyTimeout", EMPTY_TIMEOUT);
+		config.set("general.saveXP", SAVE_EXP);
+		config.set("general.saveXPRatio", SAVE_EXP_RATION);
 		
 //		try {
 //			config.save(config.getCurrentPath());

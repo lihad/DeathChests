@@ -1,13 +1,12 @@
 name: DeathChests
 main: com.Belkar.DeathChests.DeathChests
 author: _Belkar_
-version: 1.1d
+version: 1.2
 commands:
   deathchest:
     description: Main command
     usage: /<command>
     aliases: dc
-    permission: deathchest.admin
 permissions:
   deathchest.admin:
     description: Allows to use the commands (useless for normal users)
@@ -33,8 +32,17 @@ permissions:
     default: true
     children:
       deathchest.use: true
+  deathchest.use.xp:
+    description: Also saves the XP level of the player in the chest
+    default: true
+    children:
+      deathchest.use: true
   deathchest.use.noTimeout:
     description: Disables the deactivate Timeout for future deathchests. After the timeout everyone can open it.
     default: op
     children:
       deathchest.use: true
+      
+  deathchest.compass:
+    description: Allows to use the /dc compass command.
+    default: true

@@ -26,13 +26,17 @@ public class Tombstone {
 	private boolean alreadyDroppedChests = false;
 	private long timestamp = -1;
 	
-	public Tombstone(Player owner, String world, Vector chestPos, Vector chest2Pos, Vector signPos) {
+	private int savedXp = 0;
+	
+	public Tombstone(Player owner, String world, Vector chestPos, Vector chest2Pos, Vector signPos, int xp) {
 //		this.owner = owner.getName();
 		this.owner = owner;
 		this.worldName = world; 
 		this.chestPosition = Utils.toArray(chestPos);
 		this.chest2Position = Utils.toArray(chest2Pos);
 		this.signPosition = Utils.toArray(signPos);
+		
+		this.savedXp = xp;
 		
 		if (!owner.hasPermission("deathchest.use.noTimeout")) {
 			this.timestamp = System.currentTimeMillis();
@@ -44,6 +48,7 @@ public class Tombstone {
 		if (!owner.hasPermission("deathchest.use.noTimeout")) {
 			this.timestamp = currentTimestamp - Long.parseLong(node.getAttribute("existingTime"));
 		}
+		this.savedXp = Integer.getInteger(node.getAttribute("xp"));
 		this.alreadyDroppedChests = Boolean.getBoolean(node.getAttribute("dropped"));
 		
 		Element positionsNode = (Element) node.getElementsByTagName("positions").item(0);
@@ -104,17 +109,27 @@ public class Tombstone {
 	 * @param y Y-Coordinate
 	 * @param z Z-Coordinate
 	 */
-	public boolean isChest(int x, int y, int z) {
-		if (x == chestPosition[0] && y == chestPosition[1] && z == chestPosition[2]) {
-			return true;
-		}
-		if (chest2Position != null && x == chest2Position[0] && y == chest2Position[1] && z == chest2Position[2]) {
-			return true;
-		}
-		if (signPosition != null && x == signPosition[0] && y == signPosition[1] && z == signPosition[2]) {
-			return true;
+	public boolean isChest(int x, int y, int z, String world) {
+		if (this.worldName.equalsIgnoreCase(world)) {
+			if (x == chestPosition[0] && y == chestPosition[1] && z == chestPosition[2]) {
+				return true;
+			}
+			if (chest2Position != null && x == chest2Position[0] && y == chest2Position[1] && z == chest2Position[2]) {
+				return true;
+			}
+			if (signPosition != null && x == signPosition[0] && y == signPosition[1] && z == signPosition[2]) {
+				return true;
+			}
 		}
 		return false;
+	}
+	
+	/**Same as isChest(int, int, int, String) but with a Location
+	 * @param Location to check
+	 * @return true if there is a this chest
+	 */
+	public boolean isChest(Location loc) {
+		return isChest(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().getName());
 	}
 
 	/**Converts the SignLocation into a usable Location
@@ -177,7 +192,13 @@ public class Tombstone {
 		}
 		return new ItemStack(Material.CHEST, amount);
 	}
+
 	
+	/**Returns the amount of XP that is saved in the chest
+	 */
+	public int getXp() {
+		return savedXp;
+	}
 	
 	/**Returns the Inventory of the ChestBlocks
 	 */
@@ -219,6 +240,7 @@ public class Tombstone {
 
 	public Node createXmlNode(Element rootNode, Document xmlDoc, long currentTimestamp) {
 		rootNode.setAttribute("owner", this.owner.getName());
+		rootNode.setAttribute("xp", Integer.toString(savedXp));
 
 		Element positions = xmlDoc.createElement("positions");
 		positions.setAttribute("world", worldName);

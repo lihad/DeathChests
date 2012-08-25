@@ -16,3 +16,8 @@ Version 1.1d
 	Added 'general.pickupEmpty' config-node. If this is set to 'true' the deathChest gets automatically collected if it got fully emptied.
 	Added 'general:emptyTimeout' defines the time in seconds between closing the chest and putting it into the inventory of the player.
 	Added link to the Dev-Bukkit site on writing an unknown command.
+	
+Version 1.2
+	Fixed Players not allowed to open/break their own chests
+	Added the /dc compass command to set your compass target to your FIRST deathchest.
+	Added the possibility to store your XP in the DeathChest. (global config + Permission)

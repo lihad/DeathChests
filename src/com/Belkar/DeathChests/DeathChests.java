@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import me.desht.dhutils.ExperienceManager;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -27,6 +29,8 @@ public class DeathChests extends JavaPlugin {
 	// Every side of the chest and its prioity
 	private static final Vector[] SIDE_CHEST_VECTORS = new Vector[] {new Vector(1, 0, 0), new Vector(0, 0, 1), new Vector(-1, 0, 0), new Vector(0, 0, -1) };
 //	private static final Vector[] ROUND_CHEST_VECTORS = new Vector[] {new Vector(1, 0, 0), new Vector(0, 0, 1), new Vector(-1, 0, 0), new Vector(0, 0, -1), new Vector(0, 1, 0)};
+
+//	private static final String COMPASS_METADATA = "DeathChest-CompassBak";
 	
 	// Listener for everything
 	@SuppressWarnings("unused")
@@ -36,10 +40,16 @@ public class DeathChests extends JavaPlugin {
 
 	// The Task ID of the autosaver (not really needed but for safety)
 	private int autosaveTaskId = -1;
+
+//	private List<Player> compassData;
 	
 	@Override
 	public void onDisable() {
 		saveConfig();
+		
+//		while (this.compassData.size() > 0) {
+//			removeCompassMetadata(compassData.get(0));
+//		}
 		
 		super.onDisable();
 		getLogger().info(this.getDescription().getFullName() + " v" + this.getDescription().getVersion() + "disabled successfully!");
@@ -67,6 +77,8 @@ public class DeathChests extends JavaPlugin {
 		
         // Create and register the EventListener
 		listener = new DeathChestEventListener(this);
+		
+//		this.compassData = new LinkedList<>();
 		
 		super.onEnable();
 		getLogger().info(this.getDescription().getFullName() + "enabled successfully!");
@@ -165,7 +177,7 @@ public class DeathChests extends JavaPlugin {
 	 * @param inventory The full inventory of the Owner (can't be gathered later since now it's already dropped)
 	 * @param countChest Amount of available chests (1 = singleChest, 2 = doubleChest)
 	 */
-	public void addChest(Player owner, ItemStack[] inventory, int countChest, boolean free) {
+	public void addChest(Player owner, ItemStack[] inventory, int countChest, boolean free, int allXp) {
 		if (owner == null || inventory == null)
 			throw new NullPointerException();
 		if (countChest <= 0 || countChest > 2)
@@ -280,10 +292,14 @@ public class DeathChests extends JavaPlugin {
 			}
 		}
 		
-		//TODO: Maybe also save EXP (probably not)
+		// Give the player his XP back
+		int xp = 0;
+		if (Settings.SAVE_EXP && owner.hasPermission("deathchest.use.xp")) {
+			xp = (int)((float)allXp * Settings.SAVE_EXP_RATION);
+		}
 		
 		// Add the newly created DeathChest to the collection
-		Tombstone stone = new Tombstone(owner, owner.getWorld().getName(), chestPos, chest2Pos, signPosition);
+		Tombstone stone = new Tombstone(owner, owner.getWorld().getName(), chestPos, chest2Pos, signPosition, xp);
 		if (free) {
 			stone.setDropChests();
 		}
@@ -371,14 +387,19 @@ public class DeathChests extends JavaPlugin {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,	String label, String[] args) {
+		Player senderPlayer = null;
+		if (sender instanceof Player) {
+			senderPlayer = (Player)sender;
+		}
+		
 		if (args.length <= 0)
 			args = new String[]{"version"};
-		if (args[0].equalsIgnoreCase("reload")) {
+		if (args[0].equalsIgnoreCase("reload") && Utils.hasPermission(senderPlayer, "deathchest.admin")) {
 			this.reloadConfig();
 			sender.sendMessage("Config reloaded!");
 		} else if (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("version")) {
 			sender.sendMessage(this.getDescription().getFullName() + " by " + this.getDescription().getAuthors().get(0));
-		} else if (args[0].equalsIgnoreCase("clear")) {
+		} else if (args[0].equalsIgnoreCase("clear") && Utils.hasPermission(senderPlayer, "deathchest.admin")) {
 			// Filter for clearing the DeathChest-Container
 			String player = null;
 			if (args.length >= 2) {
@@ -401,6 +422,12 @@ public class DeathChests extends JavaPlugin {
 			} else {
 				sender.sendMessage("Removed " + cnt + " DeathChests!");
 			}
+		} else if ((args[0].equalsIgnoreCase("compass") || args[0].equalsIgnoreCase("target")) && Utils.hasPermission(senderPlayer, "deathchest.compass")) {
+			if (this.pointCompassToChest(senderPlayer)) {
+				sender.sendMessage("Your compass now points to your DeathChest");
+			} else {
+				sender.sendMessage("Sorry there is now DeathChest to point at");
+			}
 		} else { // Unknown Command
 			sender.sendMessage("Please look at: http://dev.bukkit.org/server-mods/deathchests/");
 		}
@@ -411,13 +438,48 @@ public class DeathChests extends JavaPlugin {
 		return true;
 	}
 
+	private boolean pointCompassToChest(Player senderPlayer) {
+		String playerWorld = senderPlayer.getLocation().getWorld().getName();
+		for (Tombstone stone : deathChests) {
+			if (stone.getOwnerName().equalsIgnoreCase(senderPlayer.getName()) && stone.getWorld().equalsIgnoreCase(playerWorld)) {
+//				if (senderPlayer.hasMetadata(COMPASS_METADATA)) {
+//					removeCompassMetadata(senderPlayer);
+//				}
+//				senderPlayer.setMetadata(COMPASS_METADATA, new MetaCompassPosition(senderPlayer.getCompassTarget().clone()));
+				senderPlayer.setCompassTarget(stone.getChestLoc(senderPlayer.getWorld()).clone());
+//				compassData.add(senderPlayer);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	/**Removes a chest at the specified index
 	 * @param index
 	 */
 	private void removeChest(int index) {
 		Tombstone stone = deathChests.get(index);
+		
+		// REMOVE Compass target
+//		Player owner = stone.getOwner();
+//		if (owner.hasMetadata(COMPASS_METADATA)) {
+//			Location loc = owner.getCompassTarget();
+//			if (stone.isChest(loc)) {
+//				removeCompassMetadata(owner);
+//			}
+//		}
+		
 		removeChest(stone);
 	}
+
+//	private void removeCompassMetadata(Player owner) {
+//		MetaCompassPosition oldCompassMeta = (MetaCompassPosition) owner.getMetadata(COMPASS_METADATA).get(0);
+//		Location oldCompassTarget = (Location) oldCompassMeta.value();
+//		owner.setCompassTarget(oldCompassTarget);
+//		owner.removeMetadata(COMPASS_METADATA, this);
+//		this.compassData.remove(owner);
+//	}
 
 	/**Removes the specified chest
 	 * @param stone The DeathChest to remove
@@ -470,16 +532,9 @@ public class DeathChests extends JavaPlugin {
 	 * @return The DeathChest that is positioned there or NULL if nothing was found there.
 	 */
 	public Tombstone getDeathChestAt(Location location) {
-		String world = location.getWorld().getName();
-		int x = location.getBlockX();
-		int y = location.getBlockY();
-		int z = location.getBlockZ();
-		
 		for (Tombstone stone : deathChests) {
-			if (stone.getWorld().equalsIgnoreCase(world)) {
-				if (stone.isChest(x,y,z)) {
-					return stone;
-				}
+			if (stone.isChest(location)) {
+				return stone;
 			}
 		}
 		
@@ -504,6 +559,11 @@ public class DeathChests extends JavaPlugin {
 			if (left.size() > 0) {
 				chest.addItem(Utils.collectionToArray(left));
 			}
+		}
+		
+		// Give the player its XP back
+		if (stone.getXp() > 0) {
+			new ExperienceManager(player).changeExp(stone.getXp());
 		}
 		
 		// If the Chests are empty, put them into the players inventory or drop them on the ground.

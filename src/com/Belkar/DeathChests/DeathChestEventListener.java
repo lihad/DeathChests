@@ -2,6 +2,8 @@ package com.Belkar.DeathChests;
 
 import java.util.List;
 
+import me.desht.dhutils.ExperienceManager;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -36,6 +38,7 @@ public class DeathChestEventListener implements Listener {
 			Player player = event.getEntity();
 			if (player == null)
 				return;
+			int allXP = new ExperienceManager(player).getCurrentExp();
 			
 			Player killer = event.getEntity().getKiller();
 			if (killer != null && !player.hasPermission("deathchest.use.pvp")) {
@@ -64,6 +67,9 @@ public class DeathChestEventListener implements Listener {
 				return;
 			}
 			event.getDrops().clear();
+			if (Settings.SAVE_EXP && player.hasPermission("deathchest.use.xp")) {
+				event.setDroppedExp(0);
+			}
 			
 			// Check if a DoubleChest is needed and possible to create.
 			if (countStacks > 9 * 3 && (free || player.getInventory().contains(Material.CHEST, 2))) {
@@ -98,7 +104,7 @@ public class DeathChestEventListener implements Listener {
 			
 			// Recheck if the chests are available and place them if possible. If something strange occoured, put all the drops back on earth.
 			if (countChest > 0 || free) {
-				plugin.addChest(player, inventory, countChest, free);
+				plugin.addChest(player, inventory, countChest, free, allXP);
 			} else {
 				throw new Exception();
 			}
@@ -141,13 +147,15 @@ public class DeathChestEventListener implements Listener {
 				return;
 			
 			// Get the owner and the attacker (of the DeathChest)
-			Player owner = stone.getOwner();
+			String owner = stone.getOwnerName();
 			Player player = event.getPlayer();
 			
-			// Only allow the attacker to damage the block if it is the owner or it has the permissions to damage the Chest 
-			if (!player.hasPermission("deathchest.breakOthers") || owner == null || !(player.equals(owner))) {
+			// Only allow the attacker to damage the block if it is the owner or it has the permissions to damage the Chest
+			if (owner == null || owner.equalsIgnoreCase(player.getName()) || player.hasPermission("deathchest.breakOthers") || stone.isTimedOut()) {
+				// ALLOW
+			} else {
 				if (player != null) {
-					player.sendMessage("You are not allowed to break this tombstone! It belongs to: " + owner.getName());
+					player.sendMessage("You are not allowed to break this tombstone! It belongs to: " + owner);
 				}				
 				event.setCancelled(true);
 			}
@@ -172,16 +180,16 @@ public class DeathChestEventListener implements Listener {
 				String owner = stone.getOwnerName();
 				
 				// Only allow the owner or those who are permitted to loot/break others DeathChests
-				if (!stone.isTimedOut() && (!player.hasPermission("deathchest.breakOthers") || owner == null || !(player.getName().equalsIgnoreCase(owner)))) {
-					player.sendMessage("You are not allowed to open this tombstone! It belongs to: " + owner);
-					event.setCancelled(true);
-				} else {
+				if (owner == null || owner.equalsIgnoreCase(player.getName()) || player.hasPermission("deathchest.breakOthers") || stone.isTimedOut()) {
 					// If the player is also sneaking, invoke the auto-transfer method
 					if (player.isSneaking()) {
 						plugin.playerPickupTombstone(player, stone);
 					}
+				} else {
+					player.sendMessage("You are not allowed to open this tombstone! It belongs to: " + owner);
+					event.setCancelled(true);
 				}
-			}	
+			}
 		}
 	}
 	

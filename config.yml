@@ -4,3 +4,5 @@ general:
   timeout: 900 # in seconds!
   pickupEmpty: false
   emptyTimeout: 5
+  saveXP: true
+  saveXPRatio: 0.75
