@@ -1,0 +1,48 @@
+name: DeathChests
+main: com.Belkar.DeathChests.DeathChests
+author: _Belkar_
+version: 1.2
+commands:
+  deathchest:
+    description: Main command
+    usage: /<command>
+    aliases: dc
+permissions:
+  deathchest.admin:
+    description: Allows to use the commands (useless for normal users)
+    default: op
+  deathchest.breakOthers:
+    description: Allows to loot and break the chest of others
+    default: false
+  deathchest.use:
+    description: Creates a chest upon death if you have a chest with you
+    default: true
+  deathchest.use.free:
+    description: Doesn't need a chest to use
+    default: false
+    children:
+      deathchest.use: true
+  deathchest.use.pvp:
+    description: If this is set, the player will also drop a deathchest if killed by another player
+    default: true
+    children:
+      deathchest.use: true
+  deathchest.use.sign:
+    description: Places a sign on your death chest (if possible) (doesn't need a sign in inventory, but it doesn't drop anything)
+    default: true
+    children:
+      deathchest.use: true
+  deathchest.use.xp:
+    description: Also saves the XP level of the player in the chest
+    default: true
+    children:
+      deathchest.use: true
+  deathchest.use.noTimeout:
+    description: Disables the deactivate Timeout for future deathchests. After the timeout everyone can open it.
+    default: op
+    children:
+      deathchest.use: true
+      
+  deathchest.compass:
+    description: Allows to use the /dc compass command.
+    default: true
