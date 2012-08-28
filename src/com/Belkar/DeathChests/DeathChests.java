@@ -3,8 +3,10 @@ package com.Belkar.DeathChests;
 import java.io.File;
 import java.security.InvalidParameterException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import me.desht.dhutils.ExperienceManager;
 
@@ -43,6 +45,8 @@ public class DeathChests extends JavaPlugin {
 
 //	private List<Player> compassData;
 	
+	private static Map<Block,Long> chestmap = new HashMap<Block,Long>();
+	
 	@Override
 	public void onDisable() {
 		saveConfig();
@@ -74,6 +78,18 @@ public class DeathChests extends JavaPlugin {
 		        }
 			}
 		}, 20L);
+		this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Runnable() {
+			@Override
+			public void run() {
+				Long currentTime = System.currentTimeMillis();
+				for(int i = 0; i<chestmap.size();i++){
+					if((currentTime - chestmap.get(chestmap.keySet().toArray()[i])) > 300000){
+						((Block)chestmap.keySet().toArray()[i]).setTypeId(0);
+						chestmap.remove((Block)chestmap.keySet().toArray()[i]);
+					}
+				}
+			}
+		}, 0,6000L);
 		
         // Create and register the EventListener
 		listener = new DeathChestEventListener(this);
@@ -109,7 +125,7 @@ public class DeathChests extends JavaPlugin {
 				loaded = true;
 			}
 			if (!loaded) {
-				deathChests = new LinkedList<>();
+				deathChests = new LinkedList<Tombstone>();
 			}
 		}
 		
@@ -184,7 +200,7 @@ public class DeathChests extends JavaPlugin {
 			throw new IndexOutOfBoundsException();
 		
 		// List of special blocks (like the one that get broken by placing the chests
-		List<ItemStack> additionalBlocks = new LinkedList<>();
+		List<ItemStack> additionalBlocks = new LinkedList<ItemStack>();
 //		this.getLogger().info("Adding chest");
 		
 		// Position of the first chest
@@ -200,6 +216,7 @@ public class DeathChests extends JavaPlugin {
 		
 		// Put down the first chest
 		chestBlock.setType(Material.CHEST);
+		chestmap.put(chestBlock, System.currentTimeMillis());
 		
 		// Put down the second chest if there is the possibility or must to place one.
 		if (countChest > 1) {
@@ -569,7 +586,7 @@ public class DeathChests extends JavaPlugin {
 		// If the Chests are empty, put them into the players inventory or drop them on the ground.
 		if (Utils.getStacks(chest) <= 0) {
 			if (!stone.isDropped()) {
-				List<ItemStack> additionalItems = new LinkedList<>(player.getInventory().addItem(stone.getChests()).values());
+				List<ItemStack> additionalItems = new LinkedList<ItemStack>(player.getInventory().addItem(stone.getChests()).values());
 				if (additionalItems.size() > 0) {
 					player.getWorld().dropItem(player.getLocation(), additionalItems.get(0));
 				}

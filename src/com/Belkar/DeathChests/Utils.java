@@ -187,7 +187,7 @@ public class Utils {
 	 * @return Compressed Collection
 	 */
 	public static Collection<ItemStack> compressInventor(ItemStack[] contents) {
-		List<ItemStack> list = new LinkedList<>();
+		List<ItemStack> list = new LinkedList<ItemStack>();
 		
 		for (ItemStack itemStack : contents) {
 			if (itemStack != null && itemStack.getType() != Material.AIR) {
@@ -254,7 +254,13 @@ public class Utils {
 	        transformer.transform(domSource, fileWriter);
 	        
 	        return true;
-		} catch (ParserConfigurationException | TransformerException | FileNotFoundException ex) {
+		} catch (ParserConfigurationException ex) {
+			System.err.println("Error while writing deathchest data:");
+			ex.printStackTrace();
+		}catch (FileNotFoundException ex) {
+			System.err.println("Error while writing deathchest data:");
+			ex.printStackTrace();
+		}catch (TransformerException ex) {
 			System.err.println("Error while writing deathchest data:");
 			ex.printStackTrace();
 		}
@@ -262,7 +268,7 @@ public class Utils {
 	}
 
 	public static List<Tombstone> loadTombstone(String chestsPath) {
-		LinkedList<Tombstone> deathChests = new LinkedList<>(); 
+		LinkedList<Tombstone> deathChests = new LinkedList<Tombstone>(); 
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	        DocumentBuilder builder = factory.newDocumentBuilder();
@@ -293,7 +299,13 @@ public class Utils {
 	        		ex.printStackTrace();
 	        	}
 	        }
-		} catch (IOException | ParserConfigurationException | SAXException ex) {
+		} catch (IOException ex) {
+			System.err.println("Error while loading deathchest data:");
+			ex.printStackTrace();
+		} catch (ParserConfigurationException ex) {
+			System.err.println("Error while loading deathchest data:");
+			ex.printStackTrace();
+		} catch (SAXException ex) {
 			System.err.println("Error while loading deathchest data:");
 			ex.printStackTrace();
 		}
